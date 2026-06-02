@@ -1,0 +1,54 @@
+Airtable 配置 — 只需做 2 件事（约 3 分钟）
+==========================================
+
+.env.local 已经建好，表名也填好了。
+你只需要打开 .env.local，把下面 2 个值粘贴进去。
+
+
+第 1 步：Personal Access Token（PAT）
+--------------------------------------
+1. 浏览器打开：https://airtable.com/create/tokens
+2. 新建 Token，名字随便（例如 OrderStatus）
+3. 权限勾选你的 Base，并勾选：
+   - data.records:read
+   - data.records:write
+4. 创建后复制令牌（以 pat 开头）
+5. 粘贴到 .env.local 里这一行：
+   AIRTABLE_PAT=patxxxxxxxx
+
+
+第 2 步：Base ID
+----------------
+1. 打开你在 M1 建好的那个 Airtable Base
+2. 看浏览器地址栏，类似：
+   https://airtable.com/appAbCdEfGhIjKlMn/...
+3. 复制 app 开头那一段（例如 appAbCdEfGhIjKlMn）
+4. 粘贴到 .env.local 里这一行：
+   AIRTABLE_BASE_ID=appAbCdEfGhIjKlMn
+
+
+不用管的（已经填好）
+--------------------
+AIRTABLE_MATERIALS_TABLE=Materials
+AIRTABLE_CONSUMPTION_TABLE=Consumption_logs
+
+这是告诉程序去读哪两张表。按 M1 建表时 Tab 名是 Materials 和 Consumption_logs 就不用改。
+
+
+本地登录密码
+------------
+App 登录密码已设为：1234
+（在 .env.local 的 APP_PASSCODE=1234）
+
+
+检查是否配置成功
+----------------
+在项目文件夹打开终端，运行：
+
+  npm run check-env
+
+若显示「可以启动」，再运行：
+
+  npm run dev
+
+浏览器打开 http://localhost:3000 ，用密码 1234 登录。

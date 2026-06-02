@@ -1,0 +1,115 @@
+{
+  "$comment": "M1 Base：与 M1.md、plan-airtable.md §2 对齐；供人工建表或后续自动化对照。",
+  "version": 3,
+  "tables": [
+    {
+      "name": "Suppliers",
+      "primary_field": "name",
+      "fields": [
+        { "api_name": "name", "type": "singleLineText" },
+        { "api_name": "notes", "type": "multilineText", "optional": true }
+      ]
+    },
+    {
+      "name": "Materials",
+      "primary_field": "name",
+      "fields": [
+        { "api_name": "name", "type": "singleLineText" },
+        { "api_name": "button_label", "type": "singleLineText", "optional": true },
+        {
+          "api_name": "category",
+          "type": "singleSelect",
+          "options": ["ingredient", "bottle", "label", "ribbon", "packaging"]
+        },
+        {
+          "api_name": "material_group",
+          "type": "singleSelect",
+          "options_note": "业务自定；种子 CSV 可用中文文案，导入后固定为选项。"
+        },
+        {
+          "api_name": "supplier",
+          "type": "multipleRecordLinks",
+          "linked_table": "Suppliers"
+        },
+        {
+          "api_name": "unit",
+          "type": "singleSelect",
+          "options": ["ml", "g", "drops", "piece", "sheet", "roll", "cm"]
+        },
+        { "api_name": "default_increment", "type": "number" },
+        { "api_name": "quick_amounts", "type": "singleLineText", "optional": true },
+        { "api_name": "favorite", "type": "checkbox" },
+        { "api_name": "sort_order", "type": "number" },
+        { "api_name": "active", "type": "checkbox" },
+        { "api_name": "image", "type": "multipleAttachments", "optional": true },
+        { "api_name": "notes", "type": "multilineText", "optional": true },
+        { "api_name": "volume", "type": "number", "optional": true, "note": "后台规格" },
+        { "api_name": "size", "type": "singleLineText", "optional": true },
+        { "api_name": "color", "type": "singleLineText", "optional": true },
+        { "api_name": "cap_type", "type": "singleSelect", "optional": true, "options_note": "如 dropper / flat 等" },
+        {
+          "api_name": "packaging_type",
+          "type": "singleSelect",
+          "optional": true,
+          "options_note": "如 Product level / Order Level / Filling / Tape / Shipping Label"
+        }
+      ]
+    },
+    {
+      "name": "Material_batches",
+      "primary_field": "batch_code",
+      "fields": [
+        { "api_name": "batch_code", "type": "singleLineText" },
+        { "api_name": "material", "type": "multipleRecordLinks", "linked_table": "Materials" },
+        { "api_name": "order_date", "type": "date" },
+        { "api_name": "qty_ordered", "type": "number" },
+        { "api_name": "price", "type": "number" },
+        { "api_name": "shipment_fee", "type": "number" },
+        { "api_name": "discount", "type": "number" },
+        {
+          "api_name": "supplier",
+          "type": "multipleRecordLinks",
+          "linked_table": "Suppliers"
+        },
+        { "api_name": "picture", "type": "multipleAttachments", "optional": true },
+        { "api_name": "notes", "type": "multilineText", "optional": true }
+      ]
+    },
+    {
+      "name": "Consumption_logs",
+      "primary_field": "log_id",
+      "fields": [
+        {
+          "api_name": "log_id",
+          "type": "autoNumber",
+          "alternative_primary": "formula",
+          "note": "Primary：Autonumber 或使用 Formula 生成可读键"
+        },
+        { "api_name": "material", "type": "multipleRecordLinks", "linked_table": "Materials" },
+        {
+          "api_name": "usage_type",
+          "type": "singleSelect",
+          "options": ["rd_lab", "product", "marketing", "workshop"]
+        },
+        { "api_name": "quantity", "type": "number", "note": "正数" },
+        {
+          "api_name": "occurred_at",
+          "type": "dateTime",
+          "note": "业务发生时间（含时分）；不可用 Created time 替代"
+        },
+        { "api_name": "operator", "type": "singleLineText", "optional": true },
+        { "api_name": "device_id", "type": "singleLineText", "optional": true },
+        { "api_name": "client_request_id", "type": "singleLineText", "optional": true },
+        { "api_name": "voided", "type": "checkbox" },
+        { "api_name": "void_reason", "type": "multilineText", "optional": true },
+        { "api_name": "note", "type": "multilineText", "optional": true },
+        {
+          "api_name": "created_at",
+          "type": "createdTime",
+          "optional": true,
+          "note": "审计；不可替代 occurred_at"
+        }
+      ]
+    }
+  ]
+}

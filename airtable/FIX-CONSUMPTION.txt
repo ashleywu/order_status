@@ -1,0 +1,40 @@
+提交失败 — 在 Airtable 里改 2 个字段（约 2 分钟）
+================================================
+
+原因：Consumption_logs 表里 quantity、voided 建成了「长文本」，
+程序写入数字/勾选时会失败，页面显示「服务暂不可用」。
+
+
+在 Airtable 打开 Consumption_logs 表
+------------------------------------
+
+1. 字段 quantity（数量）
+   - 点列头 → Customize field type（自定义字段类型）
+   - 改成：Number（数字）
+   - 保存
+
+2. 字段 voided（是否作废）
+   - 点列头 → Customize field type
+   - 改成：Checkbox（复选框）
+   - 保存
+
+
+（可选）物料名显示「未命名」
+----------------------------
+
+Materials 表第一列可能带隐藏乱码（CSV 导入导致）。
+
+1. 打开 Materials 表
+2. 点第一列列头（名称列）→ Customize field type
+3. Field name（API 名）改成纯英文：name（不要有空格或奇怪字符）
+4. 保存
+
+改完后刷新 App，物料名应正常显示。
+
+
+验证
+----
+
+终端运行：npm run diagnose-airtable
+
+若 POST Consumption_logs 显示 200，即可在 App 里重新提交。

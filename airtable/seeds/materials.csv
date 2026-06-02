@@ -1,0 +1,11 @@
+﻿name,button_label,category,material_group,supplier,unit,default_increment,quick_amounts,favorite,sort_order,active,notes,volume,size,color,cap_type,packaging_type
+Lavender EO 薰衣草,,ingredient,常用精油,Eastlab Aroma Supply,drops,1,,true,10,true,,10,,,,
+Sweet Almond Oil 甜扁桃油,,ingredient,基底油,Eastlab Aroma Supply,ml,50,,true,20,true,,,,,,
+Tea Tree EO 茶树,,ingredient,常用精油,Eastlab Aroma Supply,ml,2,,true,15,true,,5,,,,
+Helichrysum EO 永久花,,ingredient,冷门精油,Eastlab Aroma Supply,ml,1,,false,80,true,,2,,,,
+Amber Bottle 30ml,,bottle,瓶子,PackWorld Trading,piece,1,,true,30,true,,,30ml,琥珀色,dropper,Product level
+Matte Bottle 50ml,,bottle,瓶子,PackWorld Trading,piece,1,,false,55,true,,,50ml,磨砂白,flat,Product level
+Kraft Paper Label,,label,标签,PackWorld Trading,sheet,5,,false,45,true,,,,,,Order Level
+Satin Ribbon 1cm,,ribbon,丝带,PackWorld Trading,roll,1,,true,35,true,,,,,,
+Shipping Bubble Mailer,,packaging,包装,PackWorld Trading,piece,10,,false,65,true,,,,,,Product level
+Old Test Bottle 100ml,[停用],bottle,瓶子,PackWorld Trading,piece,1,,false,999,false,,,100ml,透明,,Order Level

@@ -1,0 +1,3 @@
+﻿batch_code,material,order_date,qty_ordered,price,shipment_fee,discount,supplier,notes
+LAV-2025-03,Lavender EO 薰衣草,2025-03-12,2,980,120,80,Eastlab Aroma Supply,首单含折扣测试
+BUB-2025-05,Shipping Bubble Mailer,2025-05-01,300,560,45,0,PackWorld Trading,快递袋补货

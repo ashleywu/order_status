@@ -1,0 +1,37 @@
+{
+  "name": "order-status",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "dev:clean": "node scripts/clean-next.mjs && next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "icons": "node scripts/generate-icons.mjs",
+    "check-env": "node scripts/check-env.mjs",
+    "diagnose-airtable": "node scripts/diagnose-airtable.mjs"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "jose": "^6.0.10",
+    "lucide-react": "^0.468.0",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.16.0",
+    "eslint-config-next": "^15.1.0",
+    "postcss": "^8.4.49",
+    "sharp": "^0.33.5",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.7.2"
+  }
+}
