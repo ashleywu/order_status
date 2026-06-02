@@ -1,0 +1,54 @@
+Deploy to Vercel (Lab Consumption)
+==================================
+
+Already done for you
+--------------------
+- git init + first commit
+- production build verified (npm run build)
+
+You must finish (one-time, ~5 min)
+---------------------------------
+
+STEP 1 — Log in to Vercel CLI
+  A deploy command is waiting in the terminal, OR run:
+
+    npx vercel login
+
+  Or deploy directly:
+
+    npx vercel deploy --prod
+
+  Follow the browser login prompt.
+
+STEP 2 — Environment variables on Vercel
+  Project → Settings → Environment Variables → Production
+
+  Run locally to print values copied from .env.local:
+
+    npm run vercel-env
+
+  Required keys:
+    SESSION_SECRET
+    APP_PASSCODE_HASH          (NOT APP_PASSCODE in production)
+    AIRTABLE_PAT
+    AIRTABLE_BASE_ID
+    AIRTABLE_MATERIALS_TABLE   (= Materials)
+    AIRTABLE_CONSUMPTION_TABLE (= Consumption_logs)
+
+  After adding vars: Deployments → latest → Redeploy.
+
+STEP 3 — Phone / PWA
+  Open your https://xxxx.vercel.app URL
+  Login with the passcode used for APP_PASSCODE_HASH
+  (default from vercel-env script: same as local 1234 unless you changed DEPLOY_PASSCODE)
+
+Optional — GitHub
+  Push this repo to GitHub, then Vercel → Import Git Repository for auto deploys.
+
+  git remote add origin <your-github-url>
+  git push -u origin master
+
+Security
+--------
+- Never commit .env.local (already in .gitignore)
+- Change production passcode: DEPLOY_PASSCODE=YourStrongPass npm run vercel-env

@@ -10,7 +10,8 @@
     "lint": "next lint",
     "icons": "node scripts/generate-icons.mjs",
     "check-env": "node scripts/check-env.mjs",
-    "diagnose-airtable": "node scripts/diagnose-airtable.mjs"
+    "diagnose-airtable": "node scripts/diagnose-airtable.mjs",
+    "vercel-env": "node scripts/vercel-env-hints.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
