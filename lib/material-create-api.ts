@@ -1,3 +1,4 @@
+import { resolveMaterialFieldName } from "./airtable-field-names";
 import {
   AirtableHttpError,
   createRecord,
@@ -155,12 +156,42 @@ export async function createMaterialRecord(input: {
   }
 
   if (input.body.price !== undefined) {
-    fields.price = input.body.price;
+    const priceKey = await resolveMaterialFieldName(
+      input.pat,
+      input.baseId,
+      input.materialsTable,
+      "price",
+    );
+    fields[priceKey] = input.body.price;
   }
 
-  if (input.body.size) fields.size = input.body.size;
-  if (input.body.color) fields.color = input.body.color;
-  if (input.body.capType) fields.cap_type = input.body.capType;
+  if (input.body.size) {
+    const sizeKey = await resolveMaterialFieldName(
+      input.pat,
+      input.baseId,
+      input.materialsTable,
+      "size",
+    );
+    fields[sizeKey] = input.body.size;
+  }
+  if (input.body.color) {
+    const colorKey = await resolveMaterialFieldName(
+      input.pat,
+      input.baseId,
+      input.materialsTable,
+      "color",
+    );
+    fields[colorKey] = input.body.color;
+  }
+  if (input.body.capType) {
+    const capKey = await resolveMaterialFieldName(
+      input.pat,
+      input.baseId,
+      input.materialsTable,
+      "cap_type",
+    );
+    fields[capKey] = input.body.capType;
+  }
 
   let record: AirtableRecord;
   try {

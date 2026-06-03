@@ -5,7 +5,7 @@ App「新增物料」会写入 price 列。若还没有：
 
 1. 打开 Airtable → Materials 表
 2. 点 + 新建字段
-3. 名称：price（API 名必须是小写 price）
+3. 名称：price 或 Price 均可（程序会自动匹配大小写）
 4. 类型：Number（数字）
 5. 保存
 
