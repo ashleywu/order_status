@@ -1,0 +1,12 @@
+在 Airtable Materials 表添加 price 字段（一次性）
+==========================================
+
+App「新增物料」会写入 price 列。若还没有：
+
+1. 打开 Airtable → Materials 表
+2. 点 + 新建字段
+3. 名称：price（API 名必须是小写 price）
+4. 类型：Number（数字）
+5. 保存
+
+保存后可在 App 首页 → 新增物料 填写 Supplier 与 Price。

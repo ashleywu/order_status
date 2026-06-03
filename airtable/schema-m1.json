@@ -41,6 +41,7 @@
         { "api_name": "favorite", "type": "checkbox" },
         { "api_name": "sort_order", "type": "number" },
         { "api_name": "active", "type": "checkbox" },
+        { "api_name": "price", "type": "number", "optional": true, "note": "参考单价；App 新增物料表单可写" },
         { "api_name": "image", "type": "multipleAttachments", "optional": true },
         { "api_name": "notes", "type": "multilineText", "optional": true },
         { "api_name": "volume", "type": "number", "optional": true, "note": "后台规格" },

@@ -14,7 +14,7 @@ import {
 } from "@/lib/materials-contract";
 import { compareFavoritesHome } from "@/lib/material-display";
 import { readRecentMaterials } from "@/lib/recent-materials";
-import { ChevronRight, ClipboardList, LogOut, Star } from "lucide-react";
+import { ChevronRight, ClipboardList, LogOut, Plus, Star } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -114,6 +114,15 @@ export function HomeContent() {
         >
           <ClipboardList className="h-5 w-5" aria-hidden />
           查看消耗记录
+          <ChevronRight className="h-4 w-4" aria-hidden />
+        </Link>
+
+        <Link
+          href="/materials/new"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+        >
+          <Plus className="h-5 w-5" aria-hidden />
+          新增物料
           <ChevronRight className="h-4 w-4" aria-hidden />
         </Link>
 

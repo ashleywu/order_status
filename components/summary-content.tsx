@@ -7,6 +7,12 @@ import type {
   ConsumptionLogPeriod,
 } from "@/lib/consumption-logs-contract";
 import { fetchConsumptionLogs } from "@/lib/consumption-logs-client";
+import {
+  aggregateConsumptionLogs,
+  groupAggregatedRows,
+  summaryStats,
+  type SummaryGroupMode,
+} from "@/lib/consumption-logs-aggregate";
 import { USAGE_OPTIONS, usageLabel, type UsageType } from "@/lib/consumption-types";
 import { formatUnit, syncLine } from "@/lib/material-display";
 import { Loader2, RefreshCw } from "lucide-react";
@@ -18,49 +24,12 @@ const PERIOD_OPTIONS: { value: ConsumptionLogPeriod; label: string }[] = [
   { value: "month", label: "本月" },
 ];
 
-type GroupMode = "list" | "usage" | "materialGroup";
+type GroupMode = SummaryGroupMode;
 
 function chipClass(active: boolean): string {
   return active
     ? "border-blue-600 bg-blue-600 text-white"
     : "border-slate-300 bg-white text-slate-800 hover:bg-slate-50";
-}
-
-function groupLogs(
-  logs: ConsumptionLogDto[],
-  mode: GroupMode,
-): { key: string; label: string; logs: ConsumptionLogDto[]; totalQty: number }[] {
-  if (mode === "list") {
-    const totalQty = logs.reduce((s, l) => s + l.quantity, 0);
-    return [{ key: "all", label: "全部", logs, totalQty }];
-  }
-
-  const map = new Map<string, ConsumptionLogDto[]>();
-  for (const log of logs) {
-    const key =
-      mode === "usage"
-        ? log.usageType
-        : log.materialGroup || "未分组";
-    const bucket = map.get(key) ?? [];
-    bucket.push(log);
-    map.set(key, bucket);
-  }
-
-  return [...map.entries()]
-    .map(([key, items]) => {
-      const label =
-        mode === "usage" ? usageLabel(key as UsageType) : key;
-      const totalQty = items.reduce((s, l) => s + l.quantity, 0);
-      return {
-        key,
-        label,
-        logs: items.sort(
-          (a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt),
-        ),
-        totalQty,
-      };
-    })
-    .sort((a, b) => b.logs.length - a.logs.length);
 }
 
 export function SummaryContent() {
@@ -111,9 +80,14 @@ export function SummaryContent() {
     void load();
   }, [load]);
 
+  const aggregated = useMemo(() => aggregateConsumptionLogs(logs), [logs]);
   const grouped = useMemo(
-    () => groupLogs(logs, groupMode),
-    [logs, groupMode],
+    () => groupAggregatedRows(aggregated, groupMode),
+    [aggregated, groupMode],
+  );
+  const stats = useMemo(
+    () => summaryStats(logs, aggregated),
+    [logs, aggregated],
   );
 
   const periodLabel =
@@ -233,7 +207,7 @@ export function SummaryContent() {
           <div className="flex flex-wrap gap-2">
             {(
               [
-                ["list", "列表"],
+                ["list", "汇总"],
                 ["usage", "按用途"],
                 ["materialGroup", "按分组"],
               ] as const
@@ -273,7 +247,7 @@ export function SummaryContent() {
 
         {logs.length > 0 ? (
           <p className="text-sm font-medium text-slate-700">
-            共 {logs.length} 条记录
+            {stats.rawCount} 笔记录，汇总为 {stats.aggregatedCount} 项
           </p>
         ) : null}
 
@@ -284,38 +258,43 @@ export function SummaryContent() {
                 <h3 className="text-sm font-semibold text-slate-800">
                   {section.label}
                   <span className="ml-2 font-normal text-slate-500">
-                    {section.logs.length} 条
+                    {section.rows.length} 项
                   </span>
                 </h3>
               ) : null}
               <ul className="space-y-2">
-                {section.logs.map((log) => (
+                {section.rows.map((row) => (
                   <li
-                    key={log.id}
+                    key={row.key}
                     className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-semibold text-slate-900">
-                          {log.materialName}
+                          {row.materialName}
                         </p>
                         <p className="mt-1 text-sm text-slate-600">
-                          {usageLabel(log.usageType)}
+                          {usageLabel(row.usageType)}
                           {groupMode === "list" ? (
-                            <span className="text-slate-400"> · {log.materialGroup}</span>
+                            <span className="text-slate-400"> · {row.materialGroup}</span>
+                          ) : null}
+                          {row.entryCount > 1 ? (
+                            <span className="text-slate-400"> · {row.entryCount} 笔</span>
                           ) : null}
                         </p>
                       </div>
-                      <p className="shrink-0 text-right font-semibold text-slate-900">
-                        {log.quantity}{" "}
+                      <p className="shrink-0 text-right text-lg font-semibold text-slate-900">
+                        {row.totalQuantity}{" "}
                         <span className="text-sm font-normal text-slate-600">
-                          {formatUnit(log.unit)}
+                          {formatUnit(row.unit)}
                         </span>
                       </p>
                     </div>
-                    <p className="mt-2 text-xs text-slate-500">
-                      {syncLine(log.occurredAt)}
-                    </p>
+                    {row.entryCount === 1 ? (
+                      <p className="mt-2 text-xs text-slate-500">
+                        {syncLine(row.lastOccurredAt)}
+                      </p>
+                    ) : null}
                   </li>
                 ))}
               </ul>
