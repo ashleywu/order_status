@@ -1,4 +1,5 @@
 import { fetchAllRecords, type AirtableRecord } from "./airtable";
+import { readNumericField } from "./airtable-field-value";
 import type {
   ConsumptionLogDto,
   ConsumptionLogPeriod,
@@ -71,13 +72,25 @@ export function parseConsumptionLogsQuery(
   };
 }
 
-function materialIndex(materials: MaterialDto[]): Map<string, MaterialDto> {
-  return new Map(materials.map((m) => [m.id, m]));
+function materialMaps(records: AirtableRecord[]): {
+  materials: Map<string, MaterialDto>;
+  prices: Map<string, number | null>;
+} {
+  const materials = new Map<string, MaterialDto>();
+  const prices = new Map<string, number | null>();
+  for (const record of records) {
+    const dto = mapRecordToMaterialDto(record);
+    if (!dto) continue;
+    materials.set(record.id, dto);
+    prices.set(record.id, readNumericField(record.fields, "price"));
+  }
+  return { materials, prices };
 }
 
 function mapLogRecord(
   record: AirtableRecord,
   materials: Map<string, MaterialDto>,
+  prices: Map<string, number | null>,
 ): ConsumptionLogDto | null {
   const { id, fields: f } = record;
   if (isVoided(f)) return null;
@@ -98,6 +111,9 @@ function mapLogRecord(
       : record.createdTime ?? new Date().toISOString();
 
   const mat = materials.get(materialId);
+  const unitPrice = prices.get(materialId) ?? null;
+  const lineTotal =
+    unitPrice !== null ? Math.round(quantity * unitPrice * 100) / 100 : null;
 
   return {
     id,
@@ -108,6 +124,8 @@ function mapLogRecord(
     usageType: usageRaw as UsageType,
     quantity,
     occurredAt,
+    unitPrice,
+    lineTotal,
   };
 }
 
@@ -140,14 +158,10 @@ export async function listConsumptionLogs(input: {
     ),
   ]);
 
-  const materials = materialIndex(
-    materialRecords
-      .map(mapRecordToMaterialDto)
-      .filter((m): m is MaterialDto => m !== null),
-  );
+  const { materials, prices } = materialMaps(materialRecords);
 
   let logs = logRecords
-    .map((r) => mapLogRecord(r, materials))
+    .map((r) => mapLogRecord(r, materials, prices))
     .filter((r): r is ConsumptionLogDto => r !== null);
 
   if (input.query.materialGroup) {

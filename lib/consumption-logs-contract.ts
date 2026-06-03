@@ -11,6 +11,10 @@ export type ConsumptionLogDto = {
   usageType: UsageType;
   quantity: number;
   occurredAt: string;
+  /** Materials 表单价；无价格字段或未填时为 null */
+  unitPrice: number | null;
+  /** quantity × unitPrice；无单价时为 null */
+  lineTotal: number | null;
 };
 
 export type ConsumptionLogsPayload = {

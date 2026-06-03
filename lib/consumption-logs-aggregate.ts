@@ -12,6 +12,8 @@ export type AggregatedConsumptionRow = {
   totalQuantity: number;
   entryCount: number;
   lastOccurredAt: string;
+  unitPrice: number | null;
+  totalAmount: number | null;
 };
 
 export type AggregatedSection = {
@@ -34,6 +36,9 @@ export function aggregateConsumptionLogs(
     if (existing) {
       existing.totalQuantity += log.quantity;
       existing.entryCount += 1;
+      if (log.lineTotal !== null) {
+        existing.totalAmount = (existing.totalAmount ?? 0) + log.lineTotal;
+      }
       if (Date.parse(log.occurredAt) > Date.parse(existing.lastOccurredAt)) {
         existing.lastOccurredAt = log.occurredAt;
       }
@@ -48,6 +53,8 @@ export function aggregateConsumptionLogs(
         totalQuantity: log.quantity,
         entryCount: 1,
         lastOccurredAt: log.occurredAt,
+        unitPrice: log.unitPrice,
+        totalAmount: log.lineTotal,
       });
     }
   }
@@ -90,8 +97,14 @@ export function groupAggregatedRows(
 }
 
 export function summaryStats(logs: ConsumptionLogDto[], rows: AggregatedConsumptionRow[]) {
+  const totalAmount = rows.reduce(
+    (s, r) => s + (r.totalAmount ?? 0),
+    0,
+  );
+  const pricedRowCount = rows.filter((r) => r.totalAmount !== null).length;
   return {
     rawCount: logs.length,
     aggregatedCount: rows.length,
+    totalAmount: pricedRowCount > 0 ? totalAmount : null,
   };
 }

@@ -15,6 +15,7 @@ import {
 } from "@/lib/consumption-logs-aggregate";
 import { USAGE_OPTIONS, usageLabel, type UsageType } from "@/lib/consumption-types";
 import { formatUnit, syncLine } from "@/lib/material-display";
+import { formatMoney } from "@/lib/airtable-field-value";
 import { Loader2, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -246,9 +247,20 @@ export function SummaryContent() {
         ) : null}
 
         {logs.length > 0 ? (
-          <p className="text-sm font-medium text-slate-700">
-            {stats.rawCount} 笔记录，汇总为 {stats.aggregatedCount} 项
-          </p>
+          <div className="space-y-1 text-sm font-medium text-slate-700">
+            <p>
+              {stats.rawCount} 笔记录，汇总为 {stats.aggregatedCount} 项
+            </p>
+            {stats.totalAmount !== null ? (
+              <p className="text-base font-semibold text-slate-900">
+                金额合计：{formatMoney(stats.totalAmount)}
+              </p>
+            ) : (
+              <p className="text-xs text-slate-500">
+                物料未填 Price 时无法计算金额
+              </p>
+            )}
+          </div>
         ) : null}
 
         <div className="space-y-6">
@@ -259,6 +271,18 @@ export function SummaryContent() {
                   {section.label}
                   <span className="ml-2 font-normal text-slate-500">
                     {section.rows.length} 项
+                    {section.rows.some((r) => r.totalAmount !== null) ? (
+                      <>
+                        {" "}
+                        · 小计{" "}
+                        {formatMoney(
+                          section.rows.reduce(
+                            (s, r) => s + (r.totalAmount ?? 0),
+                            0,
+                          ),
+                        )}
+                      </>
+                    ) : null}
                   </span>
                 </h3>
               ) : null}
@@ -283,12 +307,22 @@ export function SummaryContent() {
                           ) : null}
                         </p>
                       </div>
-                      <p className="shrink-0 text-right text-lg font-semibold text-slate-900">
-                        {row.totalQuantity}{" "}
-                        <span className="text-sm font-normal text-slate-600">
-                          {formatUnit(row.unit)}
-                        </span>
-                      </p>
+                      <div className="shrink-0 text-right">
+                        <p className="text-lg font-semibold text-slate-900">
+                          {row.totalQuantity}{" "}
+                          <span className="text-sm font-normal text-slate-600">
+                            {formatUnit(row.unit)}
+                          </span>
+                        </p>
+                        {row.unitPrice !== null ? (
+                          <p className="mt-1 text-sm text-slate-600">
+                            @{formatMoney(row.unitPrice)} / {formatUnit(row.unit)}
+                          </p>
+                        ) : null}
+                        <p className="mt-0.5 text-base font-semibold text-emerald-800">
+                          {formatMoney(row.totalAmount)}
+                        </p>
+                      </div>
                     </div>
                     {row.entryCount === 1 ? (
                       <p className="mt-2 text-xs text-slate-500">
