@@ -146,10 +146,11 @@ export async function patchRecord(
 export function consumptionIdempotencyFormula(
   clientRequestId: string,
   lookupDays: number,
+  clientRequestIdField = "client_request_id",
 ): string {
   const escaped = escapeAirtableFormulaString(clientRequestId);
   const days = Math.max(1, Math.floor(lookupDays));
-  return `AND({client_request_id}="${escaped}", IS_AFTER(CREATED_TIME(), DATEADD(TODAY(), -${days}, "days")))`;
+  return `AND({${clientRequestIdField}}="${escaped}", IS_AFTER(CREATED_TIME(), DATEADD(TODAY(), -${days}, "days")))`;
 }
 
 /** Find consumption rows by client_request_id within CREATED_TIME window; earliest first. */
@@ -159,8 +160,13 @@ export async function findConsumptionByClientRequestId(
   consumptionTable: string,
   clientRequestId: string,
   lookupDays: number,
+  clientRequestIdField = "client_request_id",
 ): Promise<AirtableRecord[]> {
-  const formula = consumptionIdempotencyFormula(clientRequestId, lookupDays);
+  const formula = consumptionIdempotencyFormula(
+    clientRequestId,
+    lookupDays,
+    clientRequestIdField,
+  );
   const records = await fetchAllRecords(pat, baseId, consumptionTable, formula);
   return records.sort((a, b) => {
     const ta = a.createdTime ? Date.parse(a.createdTime) : 0;
@@ -170,5 +176,8 @@ export async function findConsumptionByClientRequestId(
 }
 
 export function isRecordVoided(record: AirtableRecord): boolean {
-  return record.fields.voided === true;
+  const f = record.fields;
+  if (f.voided === true) return true;
+  const bomKey = "\ufeffvoided";
+  return f[bomKey] === true;
 }

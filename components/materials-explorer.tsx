@@ -7,6 +7,7 @@ import {
   type TabSlug,
 } from "@/lib/materials-contract";
 import { useMaterials } from "@/hooks/use-materials";
+import { MATERIAL_GROUP_OPTIONS } from "@/lib/material-groups";
 import { Loader2, LogIn, Package, RefreshCw, Star } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -75,10 +76,10 @@ export function MaterialsExplorer() {
     [mats, tab],
   );
 
-  const groupNames = useMemo(
-    () => [...new Set(catMaterials.map((m) => m.group))],
-    [catMaterials],
-  );
+  const groupNames = useMemo(() => {
+    const present = new Set(catMaterials.map((m) => m.group));
+    return MATERIAL_GROUP_OPTIONS.filter((g) => present.has(g));
+  }, [catMaterials]);
 
   const [chip, setChip] = useState<string | null>(null);
   useEffect(() => {

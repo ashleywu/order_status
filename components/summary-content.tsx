@@ -16,6 +16,7 @@ import {
 import { USAGE_OPTIONS, usageLabel, type UsageType } from "@/lib/consumption-types";
 import { formatUnit, syncLine } from "@/lib/material-display";
 import { formatMoney } from "@/lib/airtable-field-value";
+import { MATERIAL_GROUP_OPTIONS } from "@/lib/material-groups";
 import { Loader2, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -44,13 +45,7 @@ export function SummaryContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const groupOptions = useMemo(() => {
-    const set = new Set<string>();
-    for (const m of materialsData?.materials ?? []) {
-      if (m.group) set.add(m.group);
-    }
-    return [...set].sort((a, b) => a.localeCompare(b, "zh-CN"));
-  }, [materialsData?.materials]);
+  const groupOptions = useMemo(() => [...MATERIAL_GROUP_OPTIONS], []);
 
   const materialOptions = useMemo(() => {
     return [...(materialsData?.materials ?? [])].sort((a, b) =>

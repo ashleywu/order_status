@@ -60,7 +60,7 @@ export function UsageContent() {
                 ) : (
                   <span className="h-5" aria-hidden />
                 )}
-                <span className="text-base leading-tight">{opt.label}</span>
+                <span className="text-base leading-tight">{opt.shortLabel}</span>
               </button>
             );
           })}

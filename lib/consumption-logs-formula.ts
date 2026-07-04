@@ -2,14 +2,17 @@ import type { UsageType } from "./consumption-types";
 import { escapeAirtableFormulaString } from "./airtable-formula";
 import type { ConsumptionLogPeriod } from "./consumption-logs-contract";
 
-function periodClause(period: ConsumptionLogPeriod): string {
+function periodClause(
+  period: ConsumptionLogPeriod,
+  occurredAtField: string,
+): string {
   switch (period) {
     case "today":
-      return `IS_SAME({occurred_at}, TODAY(), 'day')`;
+      return `IS_SAME({${occurredAtField}}, TODAY(), 'day')`;
     case "week":
-      return `IS_SAME({occurred_at}, TODAY(), 'week')`;
+      return `IS_SAME({${occurredAtField}}, TODAY(), 'week')`;
     case "month":
-      return `IS_SAME({occurred_at}, TODAY(), 'month')`;
+      return `IS_SAME({${occurredAtField}}, TODAY(), 'month')`;
   }
 }
 
@@ -18,18 +21,27 @@ export function buildConsumptionLogsFormula(input: {
   period: ConsumptionLogPeriod;
   usageType?: UsageType;
   materialId?: string;
+  fieldNames?: {
+    occurredAt?: string;
+    usageType?: string;
+    material?: string;
+  };
 }): string {
-  const parts = [periodClause(input.period)];
+  const occurredAtField = input.fieldNames?.occurredAt ?? "occurred_at";
+  const usageTypeField = input.fieldNames?.usageType ?? "usage_type";
+  const materialField = input.fieldNames?.material ?? "material";
+
+  const parts = [periodClause(input.period, occurredAtField)];
 
   if (input.usageType) {
     parts.push(
-      `{usage_type}="${escapeAirtableFormulaString(input.usageType)}"`,
+      `{${usageTypeField}}="${escapeAirtableFormulaString(input.usageType)}"`,
     );
   }
 
   if (input.materialId) {
     parts.push(
-      `{material}="${escapeAirtableFormulaString(input.materialId)}"`,
+      `{${materialField}}="${escapeAirtableFormulaString(input.materialId)}"`,
     );
   }
 

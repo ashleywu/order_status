@@ -1,4 +1,5 @@
 import type { DraftConsumption } from "./consumption-types";
+import { USAGE_TYPE_VALUES } from "./consumption-types";
 
 export const DRAFT_STORAGE_KEY = "consumption:m4:draft";
 
@@ -8,7 +9,7 @@ function isDraft(value: unknown): value is DraftConsumption {
   if (v.materialId !== undefined && typeof v.materialId !== "string") return false;
   if (
     v.usageType !== undefined &&
-    !["rd_lab", "product", "marketing", "workshop"].includes(v.usageType as string)
+    !(USAGE_TYPE_VALUES as readonly string[]).includes(v.usageType as string)
   ) {
     return false;
   }

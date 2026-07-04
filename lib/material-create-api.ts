@@ -1,4 +1,4 @@
-import { resolveMaterialFieldName } from "./airtable-field-names";
+import { resolveTableFieldName } from "./airtable-field-names";
 import {
   AirtableHttpError,
   createRecord,
@@ -6,8 +6,9 @@ import {
   type AirtableRecord,
 } from "./airtable";
 import { escapeAirtableFormulaString } from "./airtable-formula";
-import type { MaterialCreateBody, MaterialFormCategory } from "./material-form-config";
-import { MATERIAL_FORM_CATEGORIES } from "./material-form-config";
+import { CATEGORY_ORDER } from "./materials-contract";
+import type { MaterialCreateBody } from "./material-form-config";
+import { categoryForMaterialGroup } from "./material-groups";
 import { mapRecordToMaterialDto } from "./materials-map";
 import type { MaterialDto } from "./materials-contract";
 
@@ -33,12 +34,12 @@ export class MaterialCreateError extends Error {
   }
 }
 
-function parseCategory(raw: unknown): MaterialFormCategory {
+function parseCategory(raw: unknown) {
   if (
     typeof raw === "string" &&
-    (MATERIAL_FORM_CATEGORIES as readonly string[]).includes(raw)
+    (CATEGORY_ORDER as readonly string[]).includes(raw)
   ) {
-    return raw as MaterialFormCategory;
+    return raw as (typeof CATEGORY_ORDER)[number];
   }
   throw new MaterialCreateError("invalid_category");
 }
@@ -86,12 +87,19 @@ export function parseMaterialCreateBody(json: unknown): MaterialCreateBody {
     throw new MaterialCreateError("invalid_body");
   }
   const o = json as Record<string, unknown>;
+  const materialGroup = parseOptionalText(o.materialGroup);
+  const category =
+    o.category !== undefined && o.category !== null && o.category !== ""
+      ? parseCategory(o.category)
+      : materialGroup
+        ? categoryForMaterialGroup(materialGroup)
+        : parseCategory(o.category);
   return {
     name: parseName(o.name),
-    category: parseCategory(o.category),
+    category,
     supplier: parseOptionalText(o.supplier),
     price: parsePrice(o.price),
-    materialGroup: parseOptionalText(o.materialGroup),
+    materialGroup,
     unit: parseUnit(o.unit),
     defaultIncrement: parseDefaultIncrement(o.defaultIncrement),
     size: parseOptionalText(o.size),
@@ -105,12 +113,13 @@ async function findSupplierByName(
   baseId: string,
   name: string,
 ): Promise<AirtableRecord | null> {
+  const nameKey = await resolveTableFieldName(pat, baseId, SUPPLIERS_TABLE, "name");
   const escaped = escapeAirtableFormulaString(name);
   const records = await fetchAllRecords(
     pat,
     baseId,
     SUPPLIERS_TABLE,
-    `{name}="${escaped}"`,
+    `{${nameKey}}="${escaped}"`,
   );
   return records[0] ?? null;
 }
@@ -122,8 +131,36 @@ async function findOrCreateSupplier(
 ): Promise<string> {
   const existing = await findSupplierByName(pat, baseId, name);
   if (existing) return existing.id;
-  const created = await createRecord(pat, baseId, SUPPLIERS_TABLE, { name });
+  const nameKey = await resolveTableFieldName(pat, baseId, SUPPLIERS_TABLE, "name");
+  const created = await createRecord(pat, baseId, SUPPLIERS_TABLE, { [nameKey]: name });
   return created.id;
+}
+
+async function resolveMaterialWriteKeys(
+  pat: string,
+  baseId: string,
+  materialsTable: string,
+): Promise<Record<string, string>> {
+  const keys = [
+    "name",
+    "category",
+    "unit",
+    "default_increment",
+    "active",
+    "favorite",
+    "sort_order",
+    "material_group",
+    "supplier",
+    "price",
+    "size",
+    "color",
+    "cap_type",
+  ] as const;
+  const out: Record<string, string> = {};
+  for (const key of keys) {
+    out[key] = await resolveTableFieldName(pat, baseId, materialsTable, key);
+  }
+  return out;
 }
 
 export async function createMaterialRecord(input: {
@@ -132,18 +169,24 @@ export async function createMaterialRecord(input: {
   materialsTable: string;
   body: MaterialCreateBody;
 }): Promise<MaterialDto> {
+  const keys = await resolveMaterialWriteKeys(
+    input.pat,
+    input.baseId,
+    input.materialsTable,
+  );
+
   const fields: Record<string, unknown> = {
-    name: input.body.name,
-    category: input.body.category,
-    unit: input.body.unit,
-    default_increment: input.body.defaultIncrement ?? 1,
-    active: true,
-    favorite: false,
-    sort_order: 999,
+    [keys.name]: input.body.name,
+    [keys.category]: input.body.category,
+    [keys.unit]: input.body.unit,
+    [keys.default_increment]: input.body.defaultIncrement ?? 1,
+    [keys.active]: true,
+    [keys.favorite]: false,
+    [keys.sort_order]: 999,
   };
 
   if (input.body.materialGroup) {
-    fields.material_group = input.body.materialGroup;
+    fields[keys.material_group] = input.body.materialGroup;
   }
 
   if (input.body.supplier) {
@@ -152,45 +195,21 @@ export async function createMaterialRecord(input: {
       input.baseId,
       input.body.supplier,
     );
-    fields.supplier = [supplierId];
+    fields[keys.supplier] = [supplierId];
   }
 
   if (input.body.price !== undefined) {
-    const priceKey = await resolveMaterialFieldName(
-      input.pat,
-      input.baseId,
-      input.materialsTable,
-      "price",
-    );
-    fields[priceKey] = input.body.price;
+    fields[keys.price] = input.body.price;
   }
 
   if (input.body.size) {
-    const sizeKey = await resolveMaterialFieldName(
-      input.pat,
-      input.baseId,
-      input.materialsTable,
-      "size",
-    );
-    fields[sizeKey] = input.body.size;
+    fields[keys.size] = input.body.size;
   }
   if (input.body.color) {
-    const colorKey = await resolveMaterialFieldName(
-      input.pat,
-      input.baseId,
-      input.materialsTable,
-      "color",
-    );
-    fields[colorKey] = input.body.color;
+    fields[keys.color] = input.body.color;
   }
   if (input.body.capType) {
-    const capKey = await resolveMaterialFieldName(
-      input.pat,
-      input.baseId,
-      input.materialsTable,
-      "cap_type",
-    );
-    fields[capKey] = input.body.capType;
+    fields[keys.cap_type] = input.body.capType;
   }
 
   let record: AirtableRecord;
@@ -202,11 +221,29 @@ export async function createMaterialRecord(input: {
       fields,
     );
   } catch (e) {
-    if (e instanceof AirtableHttpError && e.message.includes("price")) {
-      throw new MaterialCreateError(
-        "missing_price_field",
-        "Airtable Materials 表缺少 price 字段，请添加 Number 类型字段 price",
-      );
+    if (e instanceof AirtableHttpError) {
+      const msg = e.message.toLowerCase();
+      if (msg.includes("price")) {
+        throw new MaterialCreateError(
+          "missing_price_field",
+          "Airtable Materials 表缺少 price 字段，请添加 Number 类型字段 price",
+        );
+      }
+      if (
+        msg.includes("invalid_multiple_choice") ||
+        msg.includes("select option")
+      ) {
+        throw new MaterialCreateError(
+          "invalid_unit",
+          "Airtable 的 unit 单选里没有该选项，请在 Materials 表 unit 字段添加，或改选已有单位（如 ml）。",
+        );
+      }
+      if (msg.includes("unknown field name")) {
+        throw new MaterialCreateError(
+          "upstream_error",
+          "Airtable 字段名不匹配（常见：CSV 导入后 name 列带乱码，见 airtable/FIX-CONSUMPTION.txt）",
+        );
+      }
     }
     throw e;
   }

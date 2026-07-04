@@ -1,6 +1,6 @@
 {
   "$comment": "M1 Base：与 M1.md、plan-airtable.md §2 对齐；供人工建表或后续自动化对照。",
-  "version": 3,
+  "version": 4,
   "tables": [
     {
       "name": "Suppliers",
@@ -24,7 +24,39 @@
         {
           "api_name": "material_group",
           "type": "singleSelect",
-          "options_note": "业务自定；种子 CSV 可用中文文案，导入后固定为选项。"
+          "options": [
+            "精油",
+            "植物油",
+            "纯露",
+            "皂基",
+            "植物蜡",
+            "去离子水",
+            "植物调香酒精",
+            "瓶子",
+            "标签",
+            "产品纸盒包装",
+            "产品纸盒标签",
+            "订单纸盒包装",
+            "订单手提袋",
+            "礼盒",
+            "快递纸盒",
+            "打包胶带",
+            "打包用的蜂窝纸",
+            "牛皮泡沫纸",
+            "产品卡",
+            "雪梨纸",
+            "填充拉菲纸",
+            "面油",
+            "眼油",
+            "身体按摩油",
+            "情绪油",
+            "纯精油配方",
+            "淡香水",
+            "精油皂",
+            "润唇膏",
+            "唇油",
+            "精油喷雾"
+          ]
         },
         {
           "api_name": "supplier",
@@ -53,7 +85,47 @@
           "type": "singleSelect",
           "optional": true,
           "options_note": "如 Product level / Order Level / Filling / Tape / Shipping Label"
-        }
+        },
+        {
+          "api_name": "aroma_family",
+          "type": "singleSelect",
+          "optional": true,
+          "options": [
+            "balsamic, resinous",
+            "Citrus & Fresh",
+            "Spices",
+            "Woody",
+            "Floral",
+            "Herbaceous & Green",
+            "Amber & Gourmand (Resinous)",
+            "Earthy",
+            "Resin",
+            "Flower",
+            "中药种子"
+          ],
+          "note": "精油香调族；ingredient 行填写，其他 category 可空"
+        },
+        {
+          "api_name": "fragrance_note",
+          "type": "singleLineText",
+          "optional": true,
+          "note": "香调 note；勿与 notes（长文本备注）混淆。Excel 常见值如 top、(base, fixatives)，但不限制为枚举"
+        },
+        { "api_name": "inci_name", "type": "singleLineText", "optional": true },
+        { "api_name": "botanical_name", "type": "singleLineText", "optional": true },
+        { "api_name": "extraction_method", "type": "singleLineText", "optional": true },
+        { "api_name": "plant_part", "type": "singleLineText", "optional": true },
+        { "api_name": "origin", "type": "singleLineText", "optional": true },
+        {
+          "api_name": "cultivation",
+          "type": "singleSelect",
+          "optional": true,
+          "options": ["Wild harvested", "Organic", "Conventional"]
+        },
+        { "api_name": "extraction_year", "type": "number", "optional": true },
+        { "api_name": "safety_note", "type": "singleLineText", "optional": true },
+        { "api_name": "bottling_date", "type": "date", "optional": true },
+        { "api_name": "inventory", "type": "number", "optional": true }
       ]
     },
     {
@@ -90,7 +162,16 @@
         {
           "api_name": "usage_type",
           "type": "singleSelect",
-          "options": ["rd_lab", "product", "marketing", "workshop"]
+          "options": [
+            "custom",
+            "finished_product",
+            "corporate_client",
+            "brand_sponsorship",
+            "rd_lab",
+            "workshop",
+            "raw_repack",
+            "product_sample"
+          ]
         },
         { "api_name": "quantity", "type": "number", "note": "正数" },
         {

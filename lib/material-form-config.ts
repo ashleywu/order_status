@@ -25,16 +25,17 @@ export const UNIT_OPTIONS = [
   "cm",
 ] as const;
 
-export const DEFAULT_UNIT_BY_CATEGORY: Record<MaterialFormCategory, string> = {
-  ingredient: "drops",
+export const DEFAULT_UNIT_BY_CATEGORY: Record<CanonicalCategorySlug, string> = {
+  ingredient: "ml",
   bottle: "piece",
+  label: "piece",
   packaging: "piece",
   ribbon: "roll",
 };
 
 export type MaterialCreateBody = {
   name: string;
-  category: MaterialFormCategory;
+  category: CanonicalCategorySlug;
   supplier?: string;
   price?: number;
   materialGroup?: string;

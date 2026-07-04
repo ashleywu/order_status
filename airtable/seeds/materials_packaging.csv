@@ -1,0 +1,4 @@
+﻿﻿name,button_label,category,material_group,supplier,unit,default_increment,quick_amounts,favorite,sort_order,active,price,notes,volume,size,color,cap_type,packaging_type,aroma_family,fragrance_note,inci_name,botanical_name,extraction_method,plant_part,origin,cultivation,extraction_year,safety_note,bottling_date,inventory
+Amber Bottle 30ml,,bottle,瓶子,EB,piece,1,,false,200,true,,,,30ml,琥珀色,dropper,Product level,,,,,,,,,,,
+Matte Bottle 50ml,,bottle,瓶子,EB,piece,1,,false,201,true,,,,50ml,磨砂白,flat,Product level,,,,,,,,,,,
+Shipping Bubble Mailer,,packaging,快递纸盒,EB,piece,10,,false,300,true,,,,,,,,Product level,,,,,,,,,,,

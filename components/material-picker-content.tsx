@@ -20,6 +20,7 @@ import {
   tabsPresent,
   writeLastPickerCategory,
 } from "@/lib/picker-utils";
+import { MATERIAL_GROUP_OPTIONS } from "@/lib/material-groups";
 import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
@@ -65,10 +66,10 @@ function MaterialPickerInner() {
     [sortedMats, tab],
   );
 
-  const groupNames = useMemo(
-    () => [...new Set(catMaterials.map((m) => m.group))],
-    [catMaterials],
-  );
+  const groupNames = useMemo(() => {
+    const present = new Set(catMaterials.map((m) => m.group));
+    return MATERIAL_GROUP_OPTIONS.filter((g) => present.has(g));
+  }, [catMaterials]);
 
   const gridItems = useMemo(() => {
     if (chip === null) return catMaterials;

@@ -31,6 +31,12 @@ Materials 表第一列可能带隐藏乱码（CSV 导入导致）。
 
 改完后刷新 App，物料名应正常显示。
 
+（可选）Consumption_logs.material 同样可能有 BOM
+------------------------------------------------
+
+若 App 已更新仍报 schema_mismatch，检查 Consumption_logs 的 material 列 API 名是否为纯英文 material。
+occurred_at 建议设为 Date（含时间）；若只有 Date（无时间），App 会自动只写日期部分。
+
 
 验证
 ----

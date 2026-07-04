@@ -1,0 +1,51 @@
+Consumption_logs 表 · 字段清单（App 提交消耗必填）
+================================================
+
+若表里没有 usage_type，在 Airtable 手工添加下列字段。
+Field name（API 名）须与下表一致（snake_case）。
+
+Primary field
+-------------
+log_id — Autonumber（不要用 material 或 occurred_at 作主列）
+
+字段（按建议顺序添加）
+----------------------
+
+| API 名 | Airtable 类型 | 必填 | 说明 |
+|--------|---------------|------|------|
+| material | Link → Materials | 是 | 单条 link（关闭 Allow multiple records） |
+| usage_type | Single select | 是 | 见下方 8 个选项 |
+| quantity | Number | 是 | 正数 |
+| occurred_at | Date（含时间） | 是 | 业务发生时间 |
+| operator | Single line text | 否 | |
+| device_id | Single line text | 否 | |
+| client_request_id | Single line text | 否 | 幂等 UUID |
+| voided | Checkbox | 是 | 默认未勾选 |
+| void_reason | Long text | 否 | |
+| note | Long text | 否 | 单条消耗备注（勿与 Materials.fragrance_note 混淆） |
+| created_at | Created time | 否 | 仅审计，可选 |
+
+usage_type 选项（Single select，API 名须完全一致）
+-------------------------------------------------
+custom
+finished_product
+corporate_client
+brand_sponsorship
+rd_lab
+workshop
+raw_repack
+product_sample
+
+显示名可改中文，但 Customize field type 里的 option name / API 值请用上面英文 slug。
+
+CSV
+---
+seeds/consumption_logs.csv 只有表头；正常导入后应有 usage_type 列。
+若导入后缺列，按上表手工补。
+
+验收
+----
+[ ] usage_type 存在且为 Single select，8 个选项齐全
+[ ] material → Link Materials
+[ ] log_id = Autonumber Primary
+[ ] App 提交一条消耗不报 invalid_usage_type

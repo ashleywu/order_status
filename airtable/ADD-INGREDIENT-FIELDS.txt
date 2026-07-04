@@ -1,0 +1,90 @@
+Materials 表 · 精油规格字段（阶段 1 · 一次性手工建列）
+======================================================
+
+在 Airtable 打开 Materials 表，依次点「+」新建字段。
+Field name（API 名）必须与下列英文完全一致（snake_case），代码与 CSV 导入均依赖 API 名。
+
+本阶段只建字段、不导入数据。建完后可对照 schema-m1.json（version 4）。
+
+----------------------------------------------------------------------
+1. aroma_family
+   类型：Single select
+   选项（从 ingredients_2026.csv 汇总；可留空 = NULL）：
+     - balsamic, resinous
+     - Citrus & Fresh
+     - Spices
+     - Woody
+     - Floral
+     - Herbaceous & Green
+     - Amber & Gourmand (Resinous)
+     - Earthy
+     - Resin
+     - Flower
+     - 中药种子
+   说明：导入时若出现新选项，Airtable 会提示添加。
+
+----------------------------------------------------------------------
+2. fragrance_note
+   类型：Single line text
+   示例：top、(base, fixatives)、middle …
+   说明：用 text 而非 single select，便于以后写组合 note 或中文说明。
+   注意：不要用 note 作字段名，Materials 已有 notes（长文本后台备注）。
+
+----------------------------------------------------------------------
+3. inci_name
+   类型：Single line text
+
+----------------------------------------------------------------------
+4. botanical_name
+   类型：Single line text
+
+----------------------------------------------------------------------
+5. extraction_method
+   类型：Single line text
+   说明：值种类多（Distilled / CO2 / Cold pressed…），用 text 即可。
+
+----------------------------------------------------------------------
+6. plant_part
+   类型：Single line text
+
+----------------------------------------------------------------------
+7. origin
+   类型：Single line text
+
+----------------------------------------------------------------------
+8. cultivation
+   类型：Single select
+   选项：
+     - Wild harvested
+     - Organic
+     - Conventional
+   说明：CSV 里目前只有前两项；Conventional 预建便于以后录入。
+
+----------------------------------------------------------------------
+9. extraction_year
+   类型：Number
+   格式：整数；允许空。
+
+----------------------------------------------------------------------
+10. safety_note
+    类型：Single line text
+    示例：Photosensitivity: Yes
+
+----------------------------------------------------------------------
+11. bottling_date
+    类型：Date
+    不要勾选 Include time（除非团队统一要时分）。
+
+----------------------------------------------------------------------
+12. inventory
+    类型：Number
+    说明：当前库存；允许空。
+
+----------------------------------------------------------------------
+验收 checklist
+  [ ] 12 个字段 API 名与上表一致
+  [ ] fragrance_note 不是 note
+  [ ] 瓶子/包装等现有行不受影响（新列应为空）
+  [ ] 任选一条精油试填一行，新字段类型正确（尤其 fragrance_note = text）
+
+完成后 → 阶段 2：Suppliers 简称映射（supplier_alias.csv）

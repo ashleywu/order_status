@@ -1,5 +1,6 @@
 import { fetchAllRecords, type AirtableRecord } from "./airtable";
-import { readNumericField } from "./airtable-field-value";
+import { readFieldValue, readNumericField } from "./airtable-field-value";
+import { resolveConsumptionWriteKeys } from "./airtable-field-names";
 import type {
   ConsumptionLogDto,
   ConsumptionLogPeriod,
@@ -7,15 +8,9 @@ import type {
 } from "./consumption-logs-contract";
 import { buildConsumptionLogsFormula } from "./consumption-logs-formula";
 import type { UsageType } from "./consumption-types";
+import { isUsageType } from "./consumption-types";
 import type { MaterialDto } from "./materials-contract";
 import { mapRecordToMaterialDto } from "./materials-map";
-
-const USAGE_TYPES = new Set<UsageType>([
-  "rd_lab",
-  "product",
-  "marketing",
-  "workshop",
-]);
 
 function asOptionName(v: unknown): string {
   if (typeof v === "string") return v;
@@ -46,8 +41,9 @@ function asQuantity(v: unknown): number | null {
 }
 
 function isVoided(fields: Record<string, unknown>): boolean {
-  if (fields.voided === true) return true;
-  if (fields.voided === "true") return true;
+  const v = readFieldValue(fields, "voided");
+  if (v === true) return true;
+  if (v === "true") return true;
   return false;
 }
 
@@ -57,7 +53,7 @@ function parsePeriod(raw: string | null | undefined): ConsumptionLogPeriod {
 }
 
 function parseUsageType(raw: string | null | undefined): UsageType | undefined {
-  if (raw && USAGE_TYPES.has(raw as UsageType)) return raw as UsageType;
+  if (raw && isUsageType(raw)) return raw;
   return undefined;
 }
 
@@ -95,16 +91,16 @@ function mapLogRecord(
   const { id, fields: f } = record;
   if (isVoided(f)) return null;
 
-  const materialId = firstLinkId(f.material);
+  const materialId = firstLinkId(readFieldValue(f, "material"));
   if (!materialId) return null;
 
-  const usageRaw = asOptionName(f.usage_type);
-  if (!USAGE_TYPES.has(usageRaw as UsageType)) return null;
+  const usageRaw = asOptionName(readFieldValue(f, "usage_type"));
+  if (!isUsageType(usageRaw)) return null;
 
-  const quantity = asQuantity(f.quantity);
+  const quantity = asQuantity(readFieldValue(f, "quantity"));
   if (quantity === null || quantity <= 0) return null;
 
-  const occurredRaw = f.occurred_at;
+  const occurredRaw = readFieldValue(f, "occurred_at");
   const occurredAt =
     typeof occurredRaw === "string" && occurredRaw.trim()
       ? occurredRaw
@@ -137,10 +133,20 @@ export async function listConsumptionLogs(input: {
   query: ConsumptionLogsQuery;
 }): Promise<ConsumptionLogDto[]> {
   const period = input.query.period ?? "today";
+  const fieldKeys = await resolveConsumptionWriteKeys(
+    input.pat,
+    input.baseId,
+    input.consumptionTable,
+  );
   const formula = buildConsumptionLogsFormula({
     period,
     usageType: input.query.usageType,
     materialId: input.query.materialId,
+    fieldNames: {
+      occurredAt: fieldKeys.occurred_at,
+      usageType: fieldKeys.usage_type,
+      material: fieldKeys.material,
+    },
   });
 
   const [logRecords, materialRecords] = await Promise.all([

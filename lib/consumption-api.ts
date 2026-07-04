@@ -1,4 +1,11 @@
 import type { UsageType } from "./consumption-types";
+import { isUsageType } from "./consumption-types";
+import {
+  formatOccurredAtForAirtable,
+  resolveConsumptionWriteKeys,
+  resolveTableFieldName,
+  resolveTableFieldType,
+} from "./airtable-field-names";
 import {
   AirtableHttpError,
   createRecord,
@@ -10,13 +17,6 @@ import {
 } from "./airtable";
 import { getIdempotencyLookupDays } from "./env";
 import { normalizeDefaultIncrement } from "./quantity-defaults";
-
-const USAGE_TYPES = new Set<UsageType>([
-  "rd_lab",
-  "product",
-  "marketing",
-  "workshop",
-]);
 
 const CANONICAL_CATEGORY = new Set([
   "ingredient",
@@ -103,10 +103,10 @@ export function validateClientRequestId(raw: unknown): string {
 }
 
 export function validateUsageType(raw: unknown): UsageType {
-  if (typeof raw !== "string" || !USAGE_TYPES.has(raw as UsageType)) {
+  if (typeof raw !== "string" || !isUsageType(raw)) {
     throw new ConsumptionApiError(400, "invalid_usage_type");
   }
-  return raw as UsageType;
+  return raw;
 }
 
 export function validateQuantityAgainstMaterial(
@@ -201,12 +201,29 @@ export async function postConsumptionRecord(input: {
   const occurredAt = parseOccurredAt(input.body.occurredAt);
   const lookupDays = getIdempotencyLookupDays();
 
+  const writeKeys = await resolveConsumptionWriteKeys(
+    input.pat,
+    input.baseId,
+    input.consumptionTable,
+  );
+  const occurredAtType = await resolveTableFieldType(
+    input.pat,
+    input.baseId,
+    input.consumptionTable,
+    "occurred_at",
+  );
+  const occurredAtValue = formatOccurredAtForAirtable(
+    occurredAt,
+    occurredAtType,
+  );
+
   const existing = await findConsumptionByClientRequestId(
     input.pat,
     input.baseId,
     input.consumptionTable,
     clientRequestId,
     lookupDays,
+    writeKeys.client_request_id,
   );
 
   if (existing.length > 0) {
@@ -218,12 +235,12 @@ export async function postConsumptionRecord(input: {
     input.baseId,
     input.consumptionTable,
     {
-      material: [materialId],
-      usage_type: usageType,
-      quantity,
-      occurred_at: occurredAt,
-      client_request_id: clientRequestId,
-      voided: false,
+      [writeKeys.material]: [materialId],
+      [writeKeys.usage_type]: usageType,
+      [writeKeys.quantity]: quantity,
+      [writeKeys.occurred_at]: occurredAtValue,
+      [writeKeys.client_request_id]: clientRequestId,
+      [writeKeys.voided]: false,
     },
   );
 
@@ -233,6 +250,7 @@ export async function postConsumptionRecord(input: {
     input.consumptionTable,
     clientRequestId,
     lookupDays,
+    writeKeys.client_request_id,
   );
   if (dupCheck.length > 1) {
     console.warn(
@@ -275,14 +293,26 @@ export async function voidConsumptionRecord(input: {
   }
 
   const voidReason = input.reason?.trim() || "user_undo";
+  const voidedKey = await resolveTableFieldName(
+    input.pat,
+    input.baseId,
+    input.consumptionTable,
+    "voided",
+  );
+  const voidReasonKey = await resolveTableFieldName(
+    input.pat,
+    input.baseId,
+    input.consumptionTable,
+    "void_reason",
+  );
   const patched = await patchRecord(
     input.pat,
     input.baseId,
     input.consumptionTable,
     input.recordId,
     {
-      voided: true,
-      void_reason: voidReason,
+      [voidedKey]: true,
+      [voidReasonKey]: voidReason,
     },
   );
 

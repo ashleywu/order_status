@@ -1,0 +1,121 @@
+从零重建 Airtable Base（仅 CSV，无 demo 数据）
+==============================================
+
+数据源
+------
+
+| 文件 | 用途 |
+|------|------|
+| ingredients_2026.csv | 精油 101 行（Excel EO & Extracts） |
+| materials_packaging.csv | **瓶子 / 标签 / 丝带 / 包装**（手工填，目前仅表头） |
+| materials.csv | 上两者合并后的导入文件（跑脚本生成） |
+
+文件清单
+--------
+
+| 文件 | 表 | 行数 | 用途 |
+|------|-----|------|------|
+| suppliers.csv | Suppliers | 自动 | 从 materials 所有行的 supplier 列去重 |
+| materials.csv | Materials | 101 + packaging | 全物料；列已含 bottle 用字段 |
+| material_batches.csv | Material_batches | 0（仅表头） | 以后采购批次 |
+| consumption_logs.csv | Consumption_logs | 0（仅表头） | 以后消耗记录（App 写入） |
+
+已删除：supplier_alias.csv、name_mapping.csv（全新 Base 不需要）。
+
+导入顺序（必须按此顺序）
+------------------------
+
+### 1. 新建 Base 或删除旧表
+
+清空现有 Base，或新建一个 Base。
+
+### 2. Suppliers
+
+- Add or import → CSV → `suppliers.csv`
+- 首列 Primary = **name**
+- 加可选列 **notes**（Long text）
+- 导入后应有 10 条：Aduo, EB, F, France (wholesale), LGB, NG, P, XD, XX, snow
+
+### 3. Materials
+
+- Add or import → CSV → `materials.csv`
+- Primary = **name**（允许同名多条，如两条 Lemon、两条 Balsam of Peru）
+- 导入后检查 / 修正字段类型：
+
+| API 名 | 建议类型 |
+|--------|----------|
+| category | Single select → ingredient, bottle, label, ribbon, packaging |
+| material_group | Single select（31 选项，见 lib/material-groups.ts） |
+| supplier | **Link → Suppliers**（按 name 匹配；23 行 supplier 为空正常） |
+| unit | Single select → ml, g, drops, piece, sheet, roll, cm |
+| default_increment, sort_order, volume, price, extraction_year, inventory | Number |
+| favorite, active | Checkbox |
+| quick_amounts | Single line text |
+| notes | Long text |
+| aroma_family | Single select（选项见 schema-m1.json） |
+| fragrance_note, inci_name, botanical_name, extraction_method, plant_part, origin, safety_note | Single line text |
+| cultivation | Single select |
+| bottling_date | Date |
+| size, color, button_label | Single line text |
+| cap_type, packaging_type | Single select（本 CSV 全空，可后建） |
+| image | Attachment（CSV 无，可后加） |
+
+若 CSV 导入把 supplier 建成 Text：改字段类型为 Link → Suppliers，Airtable 会按 **与 Suppliers.name 相同** 的文本自动 link。
+
+### 4. Material_batches
+
+- 新建表 Primary = **batch_code**
+- 导入 `material_batches.csv`（仅表头）或手工建列，见 schema-m1.json
+- **material** → Link Materials；**supplier** → Link Suppliers
+
+### 5. Consumption_logs
+
+**若表里没有 `usage_type`，必须手工添加**（见 `ADD-CONSUMPTION-LOGS-FIELDS.txt`）。
+
+- Primary = **log_id**（Autonumber；CSV 不含此列，导入后改 Primary 或先建 Autonumber 再导）
+- 导入 `consumption_logs.csv`（仅表头）后核对 **每一列都存在**，缺则手工补：
+
+| API 名 | 类型 |
+|--------|------|
+| material | Link → Materials |
+| **usage_type** | **Single select**（7 选项，见 ADD-CONSUMPTION-LOGS-FIELDS.txt） |
+| quantity | Number |
+| occurred_at | Date with time |
+| operator, device_id, client_request_id | Single line text |
+| voided | Checkbox |
+| void_reason, note | Long text |
+
+### 6. 环境变量
+
+更新 `.env.local` 中的 `AIRTABLE_BASE_ID` 及表名（若 Base 新建）。
+
+验收
+----
+
+- [ ] Suppliers = 10 条
+- [ ] Materials = 101 条（不是 99；含重复 name 的多行）
+- [ ] 两条 Balsam of Peru、两条 Lemon 都在
+- [ ] supplier 有值的行已 link 到 Suppliers
+- [ ] PWA / GET /api/materials 能读到数据
+
+重新生成 CSV（Excel 或 packaging 更新后）
+----------------------------------------
+
+  python airtable/scripts/regenerate-seeds-from-ingredients.py
+
+- 只改精油：更新 ingredients_2026.csv 后跑脚本
+- 只改瓶子等：编辑 materials_packaging.csv 后跑脚本（不会被精油覆盖）
+- materials.csv = 精油 + packaging 合并
+
+materials_packaging.csv 示例行（category 决定用哪些列）：
+
+  name: Amber Bottle 30ml
+  category: bottle
+  supplier: PackWorld
+  unit: piece
+  default_increment: 1
+  size: 30ml
+  color: 琥珀色
+  cap_type: dropper
+  packaging_type: Product level
+  （精油列 aroma_family / botanical_name 等留空即可）
