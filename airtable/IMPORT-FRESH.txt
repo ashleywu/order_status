@@ -78,9 +78,9 @@
 | API 名 | 类型 |
 |--------|------|
 | material | Link → Materials |
-| **usage_type** | **Single select**（7 选项，见 ADD-CONSUMPTION-LOGS-FIELDS.txt） |
+| **usage_type** | **Single select**（**8** 选项，见 ADD-CONSUMPTION-LOGS-FIELDS.txt） |
 | quantity | Number |
-| occurred_at | Date with time |
+| occurred_at | Date with time（Date-only 也可，App 兼容） |
 | operator, device_id, client_request_id | Single line text |
 | voided | Checkbox |
 | void_reason, note | Long text |
@@ -97,6 +97,15 @@
 - [ ] 两条 Balsam of Peru、两条 Lemon 都在
 - [ ] supplier 有值的行已 link 到 Suppliers
 - [ ] PWA / GET /api/materials 能读到数据
+- [ ] App 新增物料（/materials/new）能保存；选 material_group 即可，无需手选 category
+- [ ] App 提交消耗 + Summary 页能看到记录（若失败见 FIX-CONSUMPTION.txt）
+
+CSV 导入后建议检查
+------------------
+
+- Materials / Suppliers 主列 API 名 = **name**（不是带乱码的 ﻿name）
+- Consumption_logs 的 material 列 API 名 = **material**
+- 详见 airtable/FIX-CONSUMPTION.txt
 
 重新生成 CSV（Excel 或 packaging 更新后）
 ----------------------------------------
@@ -107,10 +116,11 @@
 - 只改瓶子等：编辑 materials_packaging.csv 后跑脚本（不会被精油覆盖）
 - materials.csv = 精油 + packaging 合并
 
-materials_packaging.csv 示例行（category 决定用哪些列）：
+materials_packaging.csv 示例行（App 按 **material_group** 选模板，不再按 category Tab）：
 
   name: Amber Bottle 30ml
-  category: bottle
+  category: bottle          ← CSV 列保留；App 新增页不显示，保存时由 material_group 推导
+  material_group: 瓶子
   supplier: PackWorld
   unit: piece
   default_increment: 1

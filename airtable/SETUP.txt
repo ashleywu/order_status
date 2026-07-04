@@ -32,7 +32,8 @@ Airtable 配置 — 只需做 2 件事（约 3 分钟）
 AIRTABLE_MATERIALS_TABLE=Materials
 AIRTABLE_CONSUMPTION_TABLE=Consumption_logs
 
-这是告诉程序去读哪两张表。按 M1 建表时 Tab 名是 Materials 和 Consumption_logs 就不用改。
+表名大小写不敏感（例如实际 Tab 名 consumption_logs 也可）。
+若换新建 Base，只改 AIRTABLE_BASE_ID；表名与 M1 一致则不用改。
 
 
 本地登录密码
