@@ -5,9 +5,9 @@
 ## 建表顺序
 
 1. **Suppliers**：Primary = **`name`**；按 `schema-m1.json` 建字段（Customize field → **API 名**一致）。  
-2. **Materials**：Primary = **`name`**；先建 **`category`、`unit`、`material_group`** 单选（其中 **`unit`** 含 `drops` 表示「滴」），再建 **`supplier`** → Suppliers（单/多链接均可；CSV 里写一条供应商 `name` 即按主字段匹配——建议 `name` 全局唯一）。  
+2. **Materials**：Primary = **`name`**（导入后检查 API 名是否为纯英文 `name`，见 FIX-CONSUMPTION.txt）；先建 **`category`、`unit`、`material_group`** 单选（精油种子 **`unit`** 用 **`ml`**；完整选项：ml, g, drops, piece, sheet, roll, cm），再建 **`supplier`** → Suppliers（单/多链接均可；CSV 里写一条供应商 `name` 即按主字段匹配——建议 `name` 全局唯一）。  
 3. **Material_batches**：Primary = **`batch_code`**；**`material`** → Materials，**`supplier`** → **Suppliers**（Link；临时供应商先在 Suppliers 建一条）。  
-4. **Consumption_logs**：Primary = **`log_id`**（Autonumber 或 Formula）；**`occurred_at`** 用 **含时间的日期**；可选加 **`created_at`**（Created time）仅审计。建好 **`usage_type`** 四选项后再导入。
+4. **Consumption_logs**：Primary = **`log_id`**（Autonumber 或 Formula）；**`occurred_at`** 用 **含时间的日期**（Date-only 也可，App 会写 YYYY-MM-DD）；**`usage_type`** 须含 **8 个** API 选项（见 `ADD-CONSUMPTION-LOGS-FIELDS.txt`）。可选加 **`created_at`**（Created time）仅审计。
 
 视图过滤器见 `M1.md` §7，按团队语言命名即可。
 
@@ -22,6 +22,8 @@
 | `consumption_logs.csv` | **仅表头**：列名与 API 字段对齐；**无示例行**——历史消耗请你在 UI 录入，或由 App 提交产生 |
 
 **编码**：`seeds/*.csv` 为 **UTF-8 with BOM**（字节序标记 `EF BB BF`）。含中文时请勿用 Excel 另存为「CSV ANSI」；若 Airtable 仍乱码，用 VS Code / 记事本确认以 UTF-8 打开后重新导入本仓库文件。
+
+**BOM 与 API 字段名**：BOM 是文件编码标记，但有时会让 Airtable 把首列 API 名存成 `﻿name` / `﻿material`。App 读写时会自动识别；若提交或 Summary 仍异常，见 [`FIX-CONSUMPTION.txt`](./FIX-CONSUMPTION.txt)。
 
 **若提示 “Can't import CSV file / Invalid data”**（常见原因）：
 
@@ -54,6 +56,20 @@ PAT、Base ID **不要** 提交到仓库。
 
 本目录若有 **Python** 辅助脚本：**注释与 docstring 一律用英文**（`#` / `"""..."""`），避免多人协作时出现中英混写分叉。
 
+## App 与 CSV 分工（2026-07）
+
+| 功能 | 数据来源 |
+|------|----------|
+| 选料 / 消耗 | Airtable Materials + Consumption_logs（实时） |
+| 新增物料 · 模板 | `seeds/materials_packaging.csv`（按 **material_group** 过滤） |
+| 新增物料 · 供应商下拉 | `seeds/suppliers.csv` |
+| 新增物料 · 保存 | POST `/api/materials` → 按 **material_group** 自动写 **category** |
+| 物料分组选项 | 固定 31 项，见 `lib/material-groups.ts` |
+
+PWA **新增物料页不再有 category 按钮**；只选 `material_group`。选料页仍按 Airtable `category` 分 Tab。
+
 ## 校验
 
 对照 [schema-m1.json](./schema-m1.json)：**Consumption_logs** 不得存在 plan 禁止的冗余列（`supplier`/`color`/单价等作为主档镜像）；Lookup 仅用于视图报表则允许。
+
+故障排查见 [FIX-CONSUMPTION.txt](./FIX-CONSUMPTION.txt)。

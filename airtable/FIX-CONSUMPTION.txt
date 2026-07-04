@@ -1,46 +1,94 @@
-提交失败 — 在 Airtable 里改 2 个字段（约 2 分钟）
-================================================
+Airtable 导入后常见问题（提交 / 显示失败）
+============================================
 
-原因：Consumption_logs 表里 quantity、voided 建成了「长文本」，
-程序写入数字/勾选时会失败，页面显示「服务暂不可用」。
+CSV 用 UTF-8 BOM 导出时，Airtable 有时会把第一列 API 名存成带隐藏前缀的字段
+（例如 `name`、`material` 变成 `﻿name`、`﻿material`）。App 已尽量自动适配，
+但建议在 Airtable 里改回纯英文 API 名，一劳永逸。
 
 
-在 Airtable 打开 Consumption_logs 表
+一、消耗提交失败（Review 页红色提示）
 ------------------------------------
 
-1. 字段 quantity（数量）
-   - 点列头 → Customize field type（自定义字段类型）
-   - 改成：Number（数字）
-   - 保存
+### 1. quantity / voided 类型错误
 
-2. 字段 voided（是否作废）
-   - 点列头 → Customize field type
-   - 改成：Checkbox（复选框）
-   - 保存
+Consumption_logs 表里 **quantity**、**voided** 误建为「长文本」时，写入数字/勾选会失败。
+
+- **quantity** → Number（数字）
+- **voided** → Checkbox（复选框）
+
+### 2. material 列 API 名带 BOM
+
+症状：提示「Airtable 表字段类型不对」或 schema_mismatch。
+
+1. 打开 Consumption_logs → 点 **material** 列头 → Customize field type
+2. Field name（API 名）改成纯英文：**material**
+3. 保存
+
+### 3. usage_type 缺失或选项不全
+
+必须有 Single select 字段 **usage_type**，且含 8 个 API 选项（见 ADD-CONSUMPTION-LOGS-FIELDS.txt）。
+
+### 4. occurred_at 类型
+
+- 推荐：**Date**（含时间 / Date with time）
+- 若只有 **Date**（无时间）：App 会自动只写日期 `YYYY-MM-DD`；消耗记录页「今天」筛选仍可用
 
 
-（可选）物料名显示「未命名」
-----------------------------
+二、消耗记录页为空（已提交但 Summary 无数据）
+--------------------------------------------
 
-Materials 表第一列可能带隐藏乱码（CSV 导入导致）。
+### 1. material 列 BOM（同上）
 
-1. 打开 Materials 表
-2. 点第一列列头（名称列）→ Customize field type
-3. Field name（API 名）改成纯英文：name（不要有空格或奇怪字符）
-4. 保存
+记录已在 Airtable 里，但 App 读 `material` 链接失败 → 全部被过滤。
 
-改完后刷新 App，物料名应正常显示。
+改 API 名为 **material** 后点 Summary 页 **刷新**。
 
-（可选）Consumption_logs.material 同样可能有 BOM
-------------------------------------------------
+### 2. 筛选「今天」
 
-若 App 已更新仍报 schema_mismatch，检查 Consumption_logs 的 material 列 API 名是否为纯英文 material。
-occurred_at 建议设为 Date（含时间）；若只有 Date（无时间），App 会自动只写日期部分。
+occurred_at 为日期的记录按 Airtable 时区算「今天」。若仍看不到，试 **本周**。
+
+### 3. 表名大小写
+
+.env 里 `AIRTABLE_CONSUMPTION_TABLE=Consumption_logs` 即可；实际表名 `consumption_logs` 也能匹配。
+
+
+三、新增物料失败
+----------------
+
+### 1. Materials.name 列 BOM
+
+症状：「写入 Airtable 失败」。
+
+1. Materials 表第一列 → Customize field type
+2. API 名改成 **name**
+3. Suppliers 表第一列同样检查 **name**
+
+### 2. unit 单选缺选项
+
+若 Airtable 的 **unit** 只有 `ml`，表单里不要选 `drops` / `g` 等未建选项；
+或在 Materials → unit 字段里补全：ml, g, drops, piece, sheet, roll, cm。
+
+新增原料类物料默认单位为 **ml**（与 materials.csv 一致）。
+
+
+四、物料名显示「未命名」
+------------------------
+
+Materials 主列 API 名不是 `name` 时，选料页可能显示未命名。按「三、1」修正。
 
 
 验证
 ----
 
-终端运行：npm run diagnose-airtable
+```bash
+npm run diagnose-airtable
+node scripts/test-material-create.mjs
+node scripts/test-consumption-create.mjs
+node scripts/debug-consumption-logs.mjs
+```
 
-若 POST Consumption_logs 显示 200，即可在 App 里重新提交。
+- material POST 返回 200
+- consumption POST 返回 200
+- debug 脚本能看到 Consumption_logs 行数 > 0
+
+然后在 App 里重新提交 / 刷新 Summary。
